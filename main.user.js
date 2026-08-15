@@ -62,11 +62,7 @@ SOFTWARE.
     const TYPE_MAP = {
         '洛谷': 'luogu',
         '主题库': 'P',
-        '入门与面试': 'B',
-        'Codeforces': 'CF',
-        'SPOJ': 'SP',
-        'AtCoder': 'AT',
-        'UVa': 'UVA'
+        '入门与面试': 'B'
     };
     const TYPE_KEYS = Object.keys(TYPE_MAP);
 
@@ -557,7 +553,12 @@ SOFTWARE.
             const raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) return;
             const data = JSON.parse(raw);
-            if (data.types) selectedTypes = new Set(data.types);
+            if (data.types) {
+                const validTypes = Object.values(TYPE_MAP);
+                selectedTypes = new Set(
+                    Array.from(data.types).filter(v => validTypes.includes(v))
+                );
+            }
             if (data.difficulties) selectedDifficulties = new Set(data.difficulties);
             if (data.tags) {
                 DIMENSION_KEYS.forEach(key => {
