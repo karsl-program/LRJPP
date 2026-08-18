@@ -24,7 +24,7 @@ SOFTWARE.
 // ==UserScript==
 // @name         洛谷随机跳题（离线）
 // @namespace    http://tampermonkey.net/
-// @version      2.4
+// @version      2.5
 // @description  筛选题库、难度、标签后随机跳题，使用离线题库
 // @author       karsl
 // @match        https://www.luogu.com.cn/
@@ -32,6 +32,7 @@ SOFTWARE.
 // @grant        GM_xmlhttpRequest
 // @connect      www.luogu.com.cn
 // @connect      cdn.luogu.com.cn
+// @connect      raw.githubusercontent.com
 // @require      https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js
 // @downloadURL  https://raw.githubusercontent.com/karsl-program/LRJPP/main/main.user.js
 // @updateURL    https://raw.githubusercontent.com/karsl-program/LRJPP/main/main.user.js
