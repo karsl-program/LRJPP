@@ -24,7 +24,7 @@ SOFTWARE.
 // ==UserScript==
 // @name         洛谷随机跳题（离线）
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description  筛选题库、难度、标签后随机跳题，使用离线题库
 // @author       karsl
 // @match        https://www.luogu.com.cn/
@@ -46,6 +46,8 @@ SOFTWARE.
     const METADATA_STORE = 'metadata';
     const USER_STATUS_STORE = 'user_status';
     const DATA_URL = 'https://cdn.luogu.com.cn/problemset-open/latest.ndjson.gz';
+    const UPDATE_URL = 'https://raw.githubusercontent.com/karsl-program/LRJPP/main/main.user.js';
+    const DOWNLOAD_URL = 'https://raw.githubusercontent.com/karsl-program/LRJPP/main/main.user.js';
 
     const DIFFICULTY_MAP = {
         0: '暂未评定',
@@ -547,6 +549,155 @@ SOFTWARE.
     let acceptedSet = new Set();
     let submittedSet = new Set();
     let userStatusReady = false;
+
+    function compareVersions(v1, v2) {
+        const parts1 = v1.split('.').map(Number);
+        const parts2 = v2.split('.').map(Number);
+        const len = Math.max(parts1.length, parts2.length);
+        for (let i = 0; i < len; i++) {
+            const a = parts1[i] || 0;
+            const b = parts2[i] || 0;
+            if (a > b) return 1;
+            if (a < b) return -1;
+        }
+        return 0;
+    }
+
+    function checkForUpdate() {
+        return new Promise((resolve) => {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: UPDATE_URL,
+                onload: function(res) {
+                    try {
+                        const text = res.responseText;
+                        const versionMatch = text.match(/@version\s+([\d.]+)/);
+                        if (!versionMatch) {
+                            console.warn('无法从更新源解析版本号');
+                            resolve(false);
+                            return;
+                        }
+                        const remoteVersion = versionMatch[1];
+                        const currentVersion = GM_info.script.version;
+                        if (compareVersions(remoteVersion, currentVersion) > 0) {
+                            showUpdateDialog(currentVersion, remoteVersion);
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    } catch (e) {
+                        console.error('检查更新出错', e);
+                        resolve(false);
+                    }
+                },
+                onerror: function(err) {
+                    console.warn('检查更新请求失败', err);
+                    resolve(false);
+                }
+            });
+        });
+    }
+
+    function showUpdateDialog(currentVersion, newVersion) {
+        const existing = document.getElementById('luogu-update-dialog-overlay');
+        if (existing) existing.remove();
+    
+        const overlay = document.createElement('div');
+        overlay.id = 'luogu-update-dialog-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 2147483647;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        `;
+    
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 24px 28px;
+            width: 360px;
+            max-width: 90vw;
+            text-align: center;
+            animation: slideUp 0.25s ease;
+        `;
+    
+        const icon = document.createElement('div');
+        icon.innerHTML = '🚀';
+        icon.style.cssText = 'font-size: 42px; margin-bottom: 12px;';
+    
+        const title = document.createElement('h3');
+        title.textContent = '发现新版本';
+        title.style.cssText = 'margin: 0 0 12px; font-size: 20px; font-weight: 700; color: #1a1a1a;';
+    
+        const info = document.createElement('p');
+        info.style.cssText = 'margin: 0 0 24px; font-size: 14px; color: #555; line-height: 1.5;';
+        info.innerHTML = `当前版本 <b>v${currentVersion}</b><br>最新版本 <b style="color: #4f8ef7;">v${newVersion}</b>`;
+    
+        const btnContainer = document.createElement('div');
+        btnContainer.style.cssText = 'display: flex; gap: 12px; justify-content: center;';
+    
+        const laterBtn = document.createElement('button');
+        laterBtn.textContent = '稍后再说';
+        laterBtn.style.cssText = `
+            padding: 8px 20px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f5f5f5;
+            cursor: pointer;
+            transition: background 0.2s;
+        `;
+        laterBtn.onmouseenter = () => { laterBtn.style.background = '#e8e8e8'; };
+        laterBtn.onmouseleave = () => { laterBtn.style.background = '#f5f5f5'; };
+        laterBtn.onclick = () => overlay.remove();
+    
+        const updateBtn = document.createElement('button');
+        updateBtn.textContent = '立即更新';
+        updateBtn.style.cssText = `
+            padding: 8px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #4f8ef7;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        `;
+        updateBtn.onmouseenter = () => { updateBtn.style.background = '#3a7bd5'; };
+        updateBtn.onmouseleave = () => { updateBtn.style.background = '#4f8ef7'; };
+        updateBtn.onclick = () => {
+            window.open(DOWNLOAD_URL, '_blank');
+            overlay.remove();
+        };
+    
+        btnContainer.appendChild(laterBtn);
+        btnContainer.appendChild(updateBtn);
+    
+        dialog.appendChild(icon);
+        dialog.appendChild(title);
+        dialog.appendChild(info);
+        dialog.appendChild(btnContainer);
+    
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+    
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        `;
+        document.head.appendChild(style);
+    }
 
     function loadSettings() {
         try {
@@ -1449,6 +1600,8 @@ SOFTWARE.
     async function initCore() {
         setupUI();
         console.log('【洛谷随机跳题】UI 已创建，等待用户状态初始化...');
+
+        checkForUpdate().catch(err => console.warn('检查更新失败', err));
 
         waitForUid().then(async (uid) => {
             if (uid) {
