@@ -30,6 +30,7 @@ SOFTWARE.
 // @match        https://www.luogu.com.cn/
 // @icon         https://www.luogu.com.cn/favicon.ico
 // @grant        GM_xmlhttpRequest
+// @grant        GM_info
 // @connect      www.luogu.com.cn
 // @connect      cdn.luogu.com.cn
 // @connect      raw.githubusercontent.com
