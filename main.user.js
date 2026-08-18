@@ -24,7 +24,7 @@ SOFTWARE.
 // ==UserScript==
 // @name         洛谷随机跳题（离线）
 // @namespace    http://tampermonkey.net/
-// @version      2.6
+// @version      2.7
 // @description  筛选题库、难度、标签后随机跳题，使用离线题库
 // @author       karsl
 // @match        https://www.luogu.com.cn/
@@ -567,33 +567,39 @@ SOFTWARE.
 
     function checkForUpdate() {
         return new Promise((resolve) => {
+            console.log('[更新检查] 开始请求', UPDATE_URL);
             GM_xmlhttpRequest({
                 method: 'GET',
                 url: UPDATE_URL,
                 onload: function(res) {
+                    console.log('[更新检查] 响应状态:', res.status);
+                    console.log('[更新检查] 响应长度:', res.responseText ? res.responseText.length : 0);
                     try {
                         const text = res.responseText;
                         const versionMatch = text.match(/@version\s+([\d.]+)/);
                         if (!versionMatch) {
-                            console.warn('无法从更新源解析版本号');
+                            console.warn('[更新检查] 未解析到版本号');
                             resolve(false);
                             return;
                         }
                         const remoteVersion = versionMatch[1];
                         const currentVersion = GM_info.script.version;
+                        console.log('[更新检查] 当前版本:', currentVersion, '远程版本:', remoteVersion);
                         if (compareVersions(remoteVersion, currentVersion) > 0) {
+                            console.log('[更新检查] 发现新版本，弹出对话框');
                             showUpdateDialog(currentVersion, remoteVersion);
                             resolve(true);
                         } else {
+                            console.log('[更新检查] 已是最新版本');
                             resolve(false);
                         }
                     } catch (e) {
-                        console.error('检查更新出错', e);
+                        console.error('[更新检查] 解析出错', e);
                         resolve(false);
                     }
                 },
                 onerror: function(err) {
-                    console.warn('检查更新请求失败', err);
+                    console.warn('[更新检查] 请求失败', err);
                     resolve(false);
                 }
             });
