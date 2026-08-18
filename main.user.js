@@ -24,7 +24,7 @@ SOFTWARE.
 // ==UserScript==
 // @name         洛谷随机跳题（离线）
 // @namespace    http://tampermonkey.net/
-// @version      2.5
+// @version      2.6
 // @description  筛选题库、难度、标签后随机跳题，使用离线题库
 // @author       karsl
 // @match        https://www.luogu.com.cn/
