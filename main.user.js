@@ -24,7 +24,7 @@ SOFTWARE.
 // ==UserScript==
 // @name         洛谷随机跳题（离线）
 // @namespace    http://tampermonkey.net/
-// @version      2.1
+// @version      2.2
 // @description  筛选题库、难度、标签后随机跳题，使用离线题库
 // @author       karsl
 // @match        https://www.luogu.com.cn/
@@ -852,7 +852,7 @@ SOFTWARE.
                     if (tagNames.length > 0) {
                         results = results.filter(p => {
                             if (!p.tags || p.tags.length === 0) return false;
-                            return p.tags.some(t => tagNames.includes(t));
+                            return tagNames.every(tag => p.tags.includes(tag));
                         });
                     }
                 }
